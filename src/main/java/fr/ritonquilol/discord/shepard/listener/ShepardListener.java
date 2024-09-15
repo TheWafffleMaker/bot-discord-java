@@ -1,5 +1,6 @@
 package fr.ritonquilol.discord.shepard.listener;
 
+import fr.ritonquilol.discord.shepard.command.PlayCommand;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -9,10 +10,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class ShepardListener extends ListenerAdapter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ShepardListener.class);
+    final PlayCommand playCommand;
+
+    public ShepardListener(PlayCommand playCommand) {
+        this.playCommand = playCommand;
+    }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -34,5 +41,15 @@ public class ShepardListener extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         LOGGER.info("Slash command interaction : {}", event.getName());
+        switch (event.getName()) {
+            case "zoui" -> event.reply("ZOUI").queue();
+            case "zoum" -> event.reply("ZOUMIZ").queue();
+            case "play" -> {
+                playCommand.execute(event);
+            }
+            default -> {
+            }
+        }
+
     }
 }

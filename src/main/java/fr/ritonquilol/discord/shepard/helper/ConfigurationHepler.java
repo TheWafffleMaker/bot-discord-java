@@ -27,4 +27,7 @@ public class ConfigurationHepler {
 
     @Value("${bot.name}")
     private String botName;
+
+    @Value("${bot.jukebox.channel.id}")
+    private String jukeboxChannelId;
 }
