@@ -1,39 +1,68 @@
 package fr.ritonquilol.discord.shepard.listener;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import dev.arbjerg.lavalink.client.event.TrackEndEvent;
+import dev.arbjerg.lavalink.client.player.Track;
+import dev.arbjerg.lavalink.protocol.v4.Message;
+import fr.ritonquilol.discord.shepard.manager.GuildMusicManager;
+import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
-public class ShepardTrackScheduler extends AudioEventAdapter {
+@Slf4j
+public class ShepardTrackScheduler {
+    private final GuildMusicManager guildMusicManager;
+    public final Queue<Track> queue = new LinkedList<>();
 
-    private final AudioPlayer player;
-    private final BlockingQueue<AudioTrack> queue;
-
-    public ShepardTrackScheduler(AudioPlayer player){
-        this.player = player;
-        this.queue = new LinkedBlockingQueue<>();
+    public ShepardTrackScheduler(GuildMusicManager guildMusicManager) {
+        this.guildMusicManager = guildMusicManager;
     }
 
-    public void queue(AudioTrack track){
-        if (!player.startTrack(track, true)) {
-            queue.offer(track);
+    public void enqueue(Track track) {
+        this.guildMusicManager.getPlayer().ifPresentOrElse(player -> {
+            if (player.getTrack() == null) {
+                this.startTrack(track);
+            } else {
+                this.queue.offer(track);
+            }
+        }, () -> this.startTrack(track));
+    }
+
+    public void enqueuePlaylist(List<Track> tracks) {
+        this.queue.addAll(tracks);
+
+        this.guildMusicManager.getPlayer().ifPresentOrElse(player -> {
+            if (player.getTrack() == null) {
+                this.startTrack(this.queue.poll());
+            }
+        }, () -> this.startTrack(this.queue.poll()));
+    }
+
+    public void onTrackStart(Track track) {
+        // Your homework: Send a message to the channel somehow, have fun!
+        log.info("Track started: {}", track.getInfo().getTitle());
+    }
+
+    public void onTrackEnd(JDA api, TrackEndEvent event, Message.EmittedEvent.TrackEndEvent.AudioTrackEndReason endReason) {
+        if (endReason.getMayStartNext()) {
+            final var nextTrack = this.queue.poll();
+
+            if (nextTrack != null) {
+                this.startTrack(nextTrack);
+            } else {
+                log.info("End of queue, disconnecting...");
+                Guild guild = api.getGuildById(event.getGuildId());
+                if (guild != null) {
+                    guild.getAudioManager().closeAudioConnection();
+                }
+            }
         }
     }
 
-    @Override
-    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if (endReason.mayStartNext) {
-            nextTrack();
-        } else {
-            player.destroy();
-        }
-    }
-
-    public void nextTrack(){
-        player.startTrack(queue.poll(), true);
+    private void startTrack(Track track) {
+        this.guildMusicManager.getLink().ifPresent(link -> link.createOrUpdatePlayer().setTrack(track).setVolume(35).subscribe());
     }
 }
