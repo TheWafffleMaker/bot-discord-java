@@ -2,7 +2,6 @@ package fr.ritonquilol.discord.shepard.command;
 
 import fr.ritonquilol.discord.shepard.helper.ConfigurationHepler;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.apache.commons.lang3.StringUtils;
 import java.util.Objects;

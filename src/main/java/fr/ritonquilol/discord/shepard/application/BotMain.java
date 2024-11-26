@@ -9,6 +9,7 @@ import fr.ritonquilol.discord.shepard.helper.ConfigurationHepler;
 import fr.ritonquilol.discord.shepard.listener.ShepardTrackScheduler;
 import fr.ritonquilol.discord.shepard.listener.ShepardEventsListener;
 import fr.ritonquilol.discord.shepard.listener.ShepardListener;
+import fr.ritonquilol.discord.shepard.service.MusicService;
 import jakarta.annotation.PostConstruct;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -25,11 +26,13 @@ public class BotMain {
     private final ShepardEventsListener shepardEventsListener;
     private final ShepardListener shepardListener;
     private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    private final MusicService musicService;
 
-    public BotMain(ConfigurationHepler configurationHelper, ShepardEventsListener shepardEventsListener, ShepardListener shepardListener) {
+    public BotMain(ConfigurationHepler configurationHelper, ShepardEventsListener shepardEventsListener, ShepardListener shepardListener, MusicService musicService) {
         this.configurationHelper = configurationHelper;
         this.shepardEventsListener = shepardEventsListener;
         this.shepardListener = shepardListener;
+        this.musicService = musicService;
     }
 
     @PostConstruct
@@ -51,7 +54,6 @@ public class BotMain {
 
         // Loading commands
         api.upsertCommand(ShepardCommands.ZOUI_COMMAND).complete();
-
 
     }
 }
